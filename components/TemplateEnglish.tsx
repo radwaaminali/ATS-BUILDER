@@ -3,7 +3,7 @@ import React from 'react';
 import { CVData } from '../types';
 
 const TemplateEnglish: React.FC<{ data: CVData }> = ({ data }) => {
-  const { personalInfo, aboutMe, jobTarget, education, experience, certifications, customSections, technicalSkills, softSkills, settings, additionalActivities } = data;
+  const { personalInfo, aboutMe, jobTarget, education, experience, projects, certifications, customSections, technicalSkills, softSkills, settings } = data;
 
   const fontClass = settings.englishFont === 'arial' ? 'font-arial' : settings.englishFont === 'serif' ? 'font-serif-standard' : 'font-inter';
   const sizeClass = settings.fontSize === 'small' ? 'text-[10pt]' : settings.fontSize === 'large' ? 'text-[12pt]' : 'text-[11pt]';
@@ -31,7 +31,7 @@ const TemplateEnglish: React.FC<{ data: CVData }> = ({ data }) => {
       {(aboutMe) && (
         <section className="mb-10 avoid-break">
           <h3 className="text-sm font-black uppercase mb-3 tracking-[0.2em]" style={{ color: accentColor }}>Profile Summary</h3>
-          <p className="text-justify opacity-80 font-medium whitespace-pre-line">{aboutMe}</p>
+          <p className="text-justify opacity-80 font-medium whitespace-pre-line leading-relaxed">{aboutMe}</p>
         </section>
       )}
 
@@ -51,89 +51,4 @@ const TemplateEnglish: React.FC<{ data: CVData }> = ({ data }) => {
                     <span className="text-[9pt] font-black bg-slate-100 px-3 py-1 rounded-full text-slate-500">{exp.period}</span>
                   </div>
                 </div>
-                <ul className="achievement-list ml-6 mt-3 space-y-1 list-disc">
-                  {exp.achievements?.split('\n').filter(l => l.trim()).map((line, i) => (
-                    <li key={i} className="text-slate-700 font-medium leading-normal pl-1">
-                      {line.trim().startsWith('•') || line.trim().startsWith('-') ? line.trim().substring(1).trim() : line.trim()}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Education Section */}
-      {education?.length > 0 && education.some(e => e.degree) && (
-        <section className="mb-10">
-          <h3 className="text-sm font-black uppercase mb-6 tracking-[0.2em] border-b pb-2" style={{ color: accentColor, borderColor: accentColor + '20' }}>Education</h3>
-          <div className="space-y-6">
-            {education?.map((edu) => edu.degree && (
-              <div key={edu.id} className="avoid-break flex justify-between items-start">
-                <div>
-                  <h4 className="font-black text-slate-800">{edu.degree} {edu.major ? `in ${edu.major}` : ''}</h4>
-                  <p className="text-sm font-bold text-slate-500">{edu.institution}</p>
-                  {edu.grade && <p className="text-[8pt] text-slate-400">Grade: {edu.grade}</p>}
-                </div>
-                <span className="text-[9pt] font-black text-slate-400">{edu.graduationYear}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Certifications */}
-      {certifications?.length > 0 && certifications.some(c => c.name) && (
-        <section className="mb-10">
-          <h3 className="text-sm font-black uppercase mb-6 tracking-[0.2em] border-b pb-2" style={{ color: accentColor, borderColor: accentColor + '20' }}>Certifications</h3>
-          <div className="space-y-3">
-            {certifications.map((cert) => cert.name && (
-              <div key={cert.id} className="avoid-break flex justify-between items-center">
-                <span className="font-bold text-slate-800">{cert.name}</span>
-                <span className="text-[9pt] font-bold text-slate-400">{cert.date}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Custom Sections */}
-      {customSections?.map((sec) => sec.title && (
-        <section key={sec.id} className="mb-10 avoid-break">
-          <h3 className="text-sm font-black uppercase mb-3 tracking-[0.2em]" style={{ color: accentColor }}>{sec.title}</h3>
-          <div className="opacity-80 font-medium whitespace-pre-line">{sec.content}</div>
-        </section>
-      ))}
-
-      {/* Skills & Expertise */}
-      <section className="mb-10 avoid-break">
-        <h3 className="text-sm font-black uppercase mb-6 tracking-[0.2em] border-b pb-2" style={{ color: accentColor, borderColor: accentColor + '20' }}>Skills & Expertise</h3>
-        <div className="grid grid-cols-2 gap-10">
-          <div className="space-y-4">
-            <h5 className="text-[8pt] font-black uppercase text-slate-400 tracking-widest mb-2">Technical Skills</h5>
-            <div className="flex flex-wrap gap-2">
-              {[
-                ...(technicalSkills?.software?.split(',') || []),
-                ...(technicalSkills?.accountingSystems?.split(',') || []),
-                ...(technicalSkills?.labEquipment?.split(',') || [])
-              ].map((s, i) => s && s.trim() && (
-                <span key={i} className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg text-[9pt] font-bold text-slate-600">{s.trim()}</span>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h5 className="text-[8pt] font-black uppercase text-slate-400 tracking-widest mb-2">Soft Skills</h5>
-            <div className="flex flex-wrap gap-2">
-              {softSkills?.map((s, i) => (
-                <span key={i} className="bg-slate-900 text-white px-3 py-1.5 rounded-full text-[8pt] font-black">{s}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-export default TemplateEnglish;
+                <ul className="achievement-list ml-6 mt-3 space-y-1 list-disc

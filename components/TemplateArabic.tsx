@@ -3,7 +3,7 @@ import React from 'react';
 import { CVData } from '../types';
 
 const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
-  const { personalInfo, aboutMe, jobTarget, education, experience, projects, customSections, certifications, technicalSkills, softSkills, settings } = data;
+  const { personalInfo, aboutMe, jobTarget, education, experience, projects, certifications, technicalSkills, softSkills, settings } = data;
 
   const fontClass = settings.arabicFont === 'cairo' ? 'font-cairo' : settings.arabicFont === 'tajawal' ? 'font-tajawal' : 'font-arial';
   const accentColor = settings.accentColor;
@@ -17,26 +17,27 @@ const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
   const headingStyle = {
     fontSize: `${settings.headingSize || 14}pt`,
     color: accentColor,
-    borderRight: `4px solid ${accentColor}`,
+    borderRight: `5px solid ${accentColor}`,
     paddingRight: '1rem',
-    marginBottom: '1rem',
+    marginBottom: '1.2rem',
     fontWeight: 900,
     backgroundColor: '#f8fafc',
-    display: 'block'
+    display: 'block',
+    letterSpacing: '-0.02em'
   };
 
   return (
     <div id="cv-content-actual" className={`bg-white text-slate-800 px-12 py-12 ${fontClass} min-h-[297mm] text-right`} dir="rtl" style={dynamicStyles}>
       {/* Header */}
       <div className="border-b-4 pb-8 mb-10 avoid-break block w-full" style={{ borderColor: accentColor }}>
-        <h1 className="font-black mb-2 leading-tight" style={{ fontSize: `${(settings.headingSize || 14) * 2.2}pt`, color: accentColor }}>
+        <h1 className="font-black mb-2 leading-tight" style={{ fontSize: `${(settings.headingSize || 14) * 2.5}pt`, color: accentColor }}>
           {personalInfo.fullName || 'الاسم الكامل'}
         </h1>
-        <div className="text-xl font-bold text-slate-500 mb-6">{jobTarget || 'المسمى الوظيفي المستهدف'}</div>
-        <div className="flex flex-wrap gap-x-8 gap-y-3 opacity-90 font-bold text-[10pt]">
-          {personalInfo.location && <span><i className="fas fa-map-marker-alt" style={{color: accentColor}}></i> {personalInfo.location}</span>}
-          {personalInfo.email && <span><i className="fas fa-envelope" style={{color: accentColor}}></i> {personalInfo.email}</span>}
-          {personalInfo.phone && <span dir="ltr">{personalInfo.phone} <i className="fas fa-phone" style={{color: accentColor}}></i></span>}
+        <div className="text-xl font-bold text-slate-500 mb-6 uppercase tracking-wider">{jobTarget || 'المسمى الوظيفي'}</div>
+        <div className="flex flex-wrap gap-x-10 gap-y-3 opacity-90 font-bold text-[10pt]">
+          {personalInfo.email && <span className="flex items-center gap-2"><i className="fas fa-envelope text-xs" style={{color: accentColor}}></i> {personalInfo.email}</span>}
+          {personalInfo.phone && <span className="flex items-center gap-2" dir="ltr"> {personalInfo.phone} <i className="fas fa-phone text-xs" style={{color: accentColor}}></i></span>}
+          {personalInfo.location && <span className="flex items-center gap-2"><i className="fas fa-map-marker-alt text-xs" style={{color: accentColor}}></i> {personalInfo.location}</span>}
         </div>
       </div>
 
@@ -44,7 +45,7 @@ const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
       {aboutMe && (
         <section style={sectionStyle} className="avoid-break block">
           <h3 className="font-black p-2" style={headingStyle}>الملخص المهني</h3>
-          <p className="pr-4 text-justify font-medium whitespace-pre-line">{aboutMe}</p>
+          <p className="pr-4 text-justify font-medium whitespace-pre-line leading-relaxed">{aboutMe}</p>
         </section>
       )}
 
@@ -62,8 +63,8 @@ const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
                 <div className="text-sm font-bold mb-3" style={{color: accentColor}}>{exp.company}</div>
                 <div className="pr-4 space-y-1 block w-full">
                   {exp.achievements?.split('\n').filter(l => l.trim()).map((line, i) => (
-                    <div key={i} className="text-justify relative pr-4 mb-1">
-                      <span className="absolute right-0 top-0 text-indigo-400 font-bold">•</span>
+                    <div key={i} className="text-justify relative pr-5 mb-1 font-medium">
+                      <span className="absolute right-0 top-1.5 w-1.5 h-1.5 rounded-full" style={{backgroundColor: accentColor}}></span>
                       {line.trim().replace(/^[•-]\s*/, '')}
                     </div>
                   ))}
@@ -74,18 +75,18 @@ const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
         </section>
       )}
 
-      {/* NEW: Key Projects */}
+      {/* Key Projects */}
       {projects && projects.length > 0 && projects.some(p => p.name) && (
         <section style={sectionStyle} className="block">
-          <h3 className="font-black p-2" style={headingStyle}>المشاريع الرئيسية (KEY PROJECTS)</h3>
+          <h3 className="font-black p-2" style={headingStyle}>المشاريع الرئيسية</h3>
           <div className="space-y-4 pr-4 block w-full">
             {projects.map((proj) => proj.name && (
               <div key={proj.id} className="avoid-break flex justify-between items-start w-full border-b border-slate-50 pb-3">
                 <div className="grow">
                    <span className="font-black text-slate-900">{proj.name} : </span>
-                   <span className="font-medium text-slate-600">{proj.description}</span>
+                   <span className="font-medium text-slate-600 leading-relaxed">{proj.description}</span>
                 </div>
-                <span className="font-black text-slate-900 mr-4 shrink-0">{proj.year}</span>
+                <span className="font-black text-slate-900 mr-4 shrink-0 text-sm">{proj.year}</span>
               </div>
             ))}
           </div>
@@ -110,25 +111,34 @@ const TemplateArabic: React.FC<{ data: CVData }> = ({ data }) => {
         </section>
       )}
 
-      {/* Skills */}
+      {/* Skills in Points (Lists) */}
       <section style={sectionStyle} className="avoid-break block w-full">
         <h3 className="font-black p-2" style={headingStyle}>المهارات والقدرات</h3>
-        <div className="pr-4 mt-4 grid grid-cols-2 gap-8">
+        <div className="pr-4 mt-4 grid grid-cols-2 gap-12">
             <div>
-              <h4 className="text-[10px] font-black text-slate-400 mb-2 uppercase border-b pb-1">المهارات التقنية</h4>
-              <div className="flex flex-wrap gap-2">
-                {[...(technicalSkills?.software?.split(',') || []), ...(technicalSkills?.accountingSystems?.split(',') || [])].map((s, i) => s && s.trim() && (
-                  <span key={i} className="bg-slate-100 px-3 py-1 rounded text-[10pt] font-bold border border-slate-200">{s.trim()}</span>
+              <h4 className="text-[11px] font-black text-slate-400 mb-4 uppercase border-b border-slate-100 pb-1">المهارات التقنية</h4>
+              <ul className="space-y-2">
+                {[
+                  ...(technicalSkills?.software?.split(',') || []), 
+                  ...(technicalSkills?.accountingSystems?.split(',') || [])
+                ].map((s, i) => s && s.trim() && (
+                  <li key={i} className="text-[10pt] font-bold text-slate-700 flex items-center gap-3">
+                    <i className="fas fa-chevron-left text-[8px]" style={{color: accentColor}}></i>
+                    {s.trim()}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
             <div>
-              <h4 className="text-[10px] font-black text-slate-400 mb-2 uppercase border-b pb-1">المهارات الشخصية</h4>
-              <div className="flex flex-wrap gap-2">
+              <h4 className="text-[11px] font-black text-slate-400 mb-4 uppercase border-b border-slate-100 pb-1">المهارات الشخصية</h4>
+              <ul className="space-y-2">
                 {softSkills?.map((s, i) => (
-                  <span key={i} className="bg-slate-900 text-white px-4 py-1 rounded text-[9pt] font-bold">{s}</span>
+                  <li key={i} className="text-[10pt] font-bold text-slate-700 flex items-center gap-3">
+                    <i className="fas fa-star text-[8px]" style={{color: accentColor}}></i>
+                    {s}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
         </div>
       </section>
