@@ -8,18 +8,26 @@ interface ChatAssistantProps {
   currentData: CVData;
 }
 
+interface Attachment {
+  data: string;
+  mimeType: string;
+  name: string;
+  preview?: string;
+}
+
 const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai' | 'system'; text: string; showOptions?: boolean }[]>([
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai' | 'system'; text: string; hasAttachment?: boolean }[]>([
     { 
       role: 'ai', 
-      text: '👋 أهلاً بك في CV.ai — خبيرك المهني المتكامل!\n\nيمكنني مساعدتك في:\n1. بناء سيرة ذاتية ATS كاملة.\n2. تحسين ملفك على LinkedIn.\n3. تدريبك على مقابلات العمل.',
-      showOptions: true
+      text: '👋 أهلاً بك! يمكنك الآن إرسال صورة سيرتك الذاتية أو ملف PDF الخاص بك وسأقوم بتحليله وتحديث بياناتك فوراً.'
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,7 +41,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
     name: 'update_cv_data',
     parameters: {
       type: Type.OBJECT,
-      description: 'تحديث كافة بيانات السيرة الذاتية بما في ذلك المعلومات الشخصية والخبرات.',
+      description: 'تحديث كافة بيانات السيرة الذاتية بما في ذلك المعلومات الشخصية والخبرات والمشاريع والتعليم والمهارات بناءً على النص أو الصورة المقدمة.',
       properties: {
         personalInfo: {
           type: Type.OBJECT,
@@ -58,6 +66,29 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
             }
           }
         },
+        projects: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              description: { type: Type.STRING },
+              year: { type: Type.STRING }
+            }
+          }
+        },
+        education: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              degree: { type: Type.STRING },
+              major: { type: Type.STRING },
+              institution: { type: Type.STRING },
+              graduationYear: { type: Type.STRING }
+            }
+          }
+        },
         technicalSkills: {
           type: Type.OBJECT,
           properties: { software: { type: Type.STRING } }
@@ -70,26 +101,62 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Fix: Explicitly type 'file' as File to avoid 'unknown' errors
+    Array.from(files).forEach((file: File) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = (event.target?.result as string).split(',')[1];
+        const preview = file.type.startsWith('image/') ? event.target?.result as string : undefined;
+        setAttachments(prev => [...prev, {
+          data: base64Data,
+          mimeType: file.type,
+          name: file.name,
+          preview
+        }]);
+      };
+      // Fix: Now correctly receives File which is a subclass of Blob
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSendMessage = async (customMsg?: string) => {
     const textToSend = customMsg || input;
-    if (!textToSend.trim() || isLoading) return;
+    if ((!textToSend.trim() && attachments.length === 0) || isLoading) return;
 
-    if (!customMsg) {
-      setMessages(prev => [...prev, { role: 'user', text: textToSend }]);
-      setInput('');
-    }
-    
+    const userMessage = textToSend || (attachments.length > 0 ? "حلل هذا الملف المرفق واستخرج البيانات منه لتحديث السيرة." : "");
+    setMessages(prev => [...prev, { role: 'user', text: userMessage, hasAttachment: attachments.length > 0 }]);
+    setInput('');
+    const currentAttachments = [...attachments];
+    setAttachments([]);
     setIsLoading(true);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const systemInstruction = `أنت "خبير مهني" يساعد المستخدم في صياغة سيرته الذاتية باحترافية وتحديث بياناته تلقائياً.`;
+      const systemInstruction = `أنت "خبير مهني" عالمي. إذا أرسل المستخدم صورة أو ملف، قم بقراءة محتوياته بدقة واستخدم أداة "update_cv_data" لتحديث بياناته. ابحث عن الخبرات والتعليم والمهارات والمشاريع.`;
+
+      const parts: any[] = [{ text: userMessage }];
+      currentAttachments.forEach(att => {
+        parts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.data
+          }
+        });
+      });
 
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: [
-          { role: 'user', parts: [{ text: `البيانات الحالية: ${JSON.stringify(currentData)}` }] },
-          { role: 'user', parts: [{ text: textToSend }] }
+          { role: 'user', parts: [{ text: `البيانات الحالية في النظام: ${JSON.stringify(currentData)}` }] },
+          { role: 'user', parts: parts }
         ],
         config: {
           systemInstruction,
@@ -101,15 +168,16 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
         for (const call of response.functionCalls) {
           if (call.name === 'update_cv_data') {
             onUpdateCV(call.args as any);
-            setMessages(prev => [...prev, { role: 'ai', text: '✅ تم تحديث بيانات سيرتك الذاتية بنجاح بناءً على محادثتنا.' }]);
+            setMessages(prev => [...prev, { role: 'ai', text: '✅ مذهل! لقد قمت بتحليل المرفقات وتحديث بيانات سيرتك الذاتية في الأقسام المخصصة لها بنجاح.' }]);
           }
         }
       } else {
-        setMessages(prev => [...prev, { role: 'ai', text: response.text || 'كيف يمكنني مساعدتك أكثر؟' }]);
+        // Fix: Use response.text directly as a property, not a method
+        setMessages(prev => [...prev, { role: 'ai', text: response.text || 'تم استلام الملف، كيف يمكنني مساعدتك في تنظيمه؟' }]);
       }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'ai', text: 'عذراً، حدث خطأ بسيط. يرجى المحاولة مرة أخرى.' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: 'عذراً، واجهت مشكلة في معالجة الملف. تأكد من جودة الصورة أو تنسيق الملف.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +190,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
         className="fixed bottom-8 right-8 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[60] border-2 border-slate-700 overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/20 to-transparent"></div>
-        <i className={`fas ${isOpen ? 'fa-times' : 'fa-magic'} text-2xl relative z-10`}></i>
+        <i className={`fas ${isOpen ? 'fa-times' : 'fa-robot'} text-2xl relative z-10`}></i>
       </button>
 
       <div className={`fixed inset-y-0 right-0 w-full md:w-[30rem] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)] z-[55] transform transition-all duration-500 ease-out border-l border-slate-100 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -130,9 +198,15 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <i className="fas fa-robot text-xl"></i>
+                <i className="fas fa-brain text-xl"></i>
               </div>
-              <h3 className="font-black text-lg">المساعد الذكي</h3>
+              <div>
+                <h3 className="font-black text-lg">المساعد الذكي (2025)</h3>
+                <div className="flex items-center gap-1.5 text-[10px] text-green-400 font-bold uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                  Active Vision Enabled
+                </div>
+              </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center">
               <i className="fas fa-times"></i>
@@ -146,6 +220,11 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
               <div className={`max-w-[90%] p-5 rounded-[2rem] text-[13px] leading-relaxed shadow-sm ${
                 msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
               }`}>
+                {msg.hasAttachment && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-black/10 rounded-xl text-[10px] font-bold">
+                    <i className="fas fa-file-alt"></i> تم إرسال ملف للتحليل
+                  </div>
+                )}
                 <div className="whitespace-pre-wrap">{msg.text}</div>
               </div>
             </div>
@@ -162,19 +241,51 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onUpdateCV, currentData }
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-8 border-t bg-white shrink-0">
+        <div className="p-8 border-t bg-white shrink-0 space-y-4">
+          {/* معاينة المرفقات */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {attachments.map((att, idx) => (
+                <div key={idx} className="relative group bg-slate-100 p-1.5 rounded-xl border border-slate-200 flex items-center gap-2">
+                  {att.preview ? (
+                    <img src={att.preview} className="w-8 h-8 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center"><i className="fas fa-file-pdf"></i></div>
+                  )}
+                  <span className="text-[10px] font-bold text-slate-600 max-w-[80px] truncate">{att.name}</span>
+                  <button onClick={() => removeAttachment(idx)} className="text-rose-500 hover:text-rose-700 p-1"><i className="fas fa-times-circle"></i></button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="relative">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileSelect} 
+              multiple 
+              className="hidden" 
+              accept="image/*,.pdf,.doc,.docx,.txt"
+            />
             <textarea
               rows={2}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-              placeholder="اكتب رسالتك للمساعد..."
-              className="w-full p-5 pr-16 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-sm outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50 resize-none shadow-inner"
+              placeholder="اكتب رسالتك أو أرفق سيرتك الذاتية..."
+              className="w-full p-5 pr-16 pl-14 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-sm outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50 resize-none shadow-inner"
             />
             <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute left-4 bottom-4 w-10 h-10 bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center hover:bg-slate-300 transition-colors"
+              title="إرفاق ملف أو صورة"
+            >
+              <i className="fas fa-paperclip"></i>
+            </button>
+            <button
               onClick={() => handleSendMessage()}
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || (!input.trim() && attachments.length === 0)}
               className="absolute right-4 bottom-4 w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-xl disabled:opacity-30 hover:bg-indigo-600 transition-colors group"
             >
               <i className="fas fa-paper-plane text-sm group-hover:rotate-12 transition-transform"></i>

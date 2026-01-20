@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CVData, Experience, Education, Certification, CustomSection } from '../types';
+import { CVData, Experience, Education, Certification, CustomSection, Project } from '../types';
 import {
   DndContext, 
   closestCenter,
@@ -43,14 +43,15 @@ const CVForm: React.FC<CVFormProps> = ({ data, onUpdate }) => {
     onUpdate({ personalInfo: { ...data.personalInfo, [e.target.name]: e.target.value } });
   };
 
-  const addItem = (listName: 'experience' | 'education' | 'certifications' | 'customSections') => {
+  const addItem = (listName: 'experience' | 'education' | 'certifications' | 'customSections' | 'projects') => {
     const id = `${listName}-${Date.now()}`;
     let newItem: any = { id };
     if (listName === 'experience') newItem = { ...newItem, company: '', title: '', period: '', achievements: '' };
     else if (listName === 'education') newItem = { ...newItem, degree: '', major: '', institution: '', graduationYear: '', grade: '' };
+    else if (listName === 'projects') newItem = { ...newItem, name: '', description: '', year: '' };
     else if (listName === 'customSections') newItem = { ...newItem, title: 'قسم جديد', content: '' };
-    else newItem = { ...newItem, name: '', date: '' };
-    onUpdate({ [listName]: [...data[listName], newItem] });
+    else if (listName === 'certifications') newItem = { ...newItem, name: '', date: '' };
+    onUpdate({ [listName]: [...(data[listName] || []), newItem] });
   };
 
   const updateItem = (listName: any, id: string, field: string, value: string) => {
@@ -61,7 +62,7 @@ const CVForm: React.FC<CVFormProps> = ({ data, onUpdate }) => {
     onUpdate({ [listName]: (data[listName] as any[]).filter(i => i.id !== id) });
   };
 
-  const handleDragEnd = (event: any, listName: 'experience' | 'education' | 'certifications' | 'customSections') => {
+  const handleDragEnd = (event: any, listName: 'experience' | 'education' | 'projects' | 'certifications' | 'customSections') => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = (data[listName] as any[]).findIndex((i) => i.id === active.id);
@@ -109,8 +110,8 @@ const CVForm: React.FC<CVFormProps> = ({ data, onUpdate }) => {
                   <InputField label="اسم الشركة" value={exp.company} placeholder="شركة الأهرام للتجارة" onChange={(e) => updateItem('experience', exp.id, 'company', e.target.value)} />
                   <InputField label="الفترة (مثلاً: 2020 - الحالي)" value={exp.period} placeholder="يناير 2020 - الحالي" onChange={(e) => updateItem('experience', exp.id, 'period', e.target.value)} />
                   <div className="md:col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">الإنجازات والمهام</label>
-                    <textarea value={exp.achievements} onChange={(e) => updateItem('experience', exp.id, 'achievements', e.target.value)} placeholder="• قمت بتحسين دقة التقارير بنسبة 30%&#10;• أدرت فريقاً من 5 محاسبين..." className="w-full p-4 border-2 border-slate-100 bg-white rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none text-sm h-24" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">الإنجازات والمهام (نقاط •)</label>
+                    <textarea value={exp.achievements} onChange={(e) => updateItem('experience', exp.id, 'achievements', e.target.value)} placeholder="• إنجاز رقم 1" className="w-full p-4 border-2 border-slate-100 bg-white rounded-2xl outline-none text-sm h-32" />
                   </div>
                 </div>
               </SortableItem>
@@ -119,11 +120,38 @@ const CVForm: React.FC<CVFormProps> = ({ data, onUpdate }) => {
         </DndContext>
       </section>
 
-      {/* 3. التعليم */}
+      {/* 3. المشاريع المهنية - NEW */}
       <section>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-slate-800 flex items-center gap-3">
             <span className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-lg">3</span>
+            المشاريع الرئيسية (Key Projects)
+          </h3>
+          <button onClick={() => addItem('projects')} className="text-xs font-bold bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all">+ إضافة مشروع</button>
+        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'projects')}>
+          <SortableContext items={(data.projects || []).map(i => i.id)} strategy={verticalListSortingStrategy}>
+            {(data.projects || []).map((proj) => (
+              <SortableItem key={proj.id} id={proj.id} onRemove={() => removeItem('projects', proj.id)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InputField label="اسم المشروع" value={proj.name} placeholder="تطوير طريق الساحل - الحمام" onChange={(e) => updateItem('projects', proj.id, 'name', e.target.value)} />
+                  <InputField label="السنة" value={proj.year} placeholder="2025" onChange={(e) => updateItem('projects', proj.id, 'year', e.target.value)} />
+                  <div className="md:col-span-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">وصف المشروع</label>
+                    <textarea value={proj.description} onChange={(e) => updateItem('projects', proj.id, 'description', e.target.value)} placeholder="وصف موجز للإنجاز الذي تم تحقيقه..." className="w-full p-4 border-2 border-slate-100 bg-white rounded-2xl outline-none text-sm h-24" />
+                  </div>
+                </div>
+              </SortableItem>
+            ))}
+          </SortableContext>
+        </DndContext>
+      </section>
+
+      {/* 4. التعليم */}
+      <section>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-black text-slate-800 flex items-center gap-3">
+            <span className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-lg">4</span>
             التعليم
           </h3>
           <button onClick={() => addItem('education')} className="text-xs font-bold bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all">+ إضافة تعليم</button>
@@ -144,18 +172,22 @@ const CVForm: React.FC<CVFormProps> = ({ data, onUpdate }) => {
         </DndContext>
       </section>
 
-      {/* 4. مهارات وتقنيات */}
+      {/* 5. مهارات وتقنيات */}
       <section>
         <h3 className="text-xl font-black mb-6 text-slate-800 flex items-center gap-3">
-          <span className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-lg">4</span>
+          <span className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-lg">5</span>
           المهارات
         </h3>
         <div className="space-y-4">
-          <InputField label="مهارات تقنية (مفصولة بفواصل)" value={data.technicalSkills.software} placeholder="Excel, SAP, Financial Modeling, SQL" onChange={(e) => onUpdate({ technicalSkills: { ...data.technicalSkills, software: e.target.value } })} />
+          <InputField label="مهارات تقنية وبرمجيات" value={data.technicalSkills.software} placeholder="Excel, SAP, Financial Modeling, SQL" onChange={(e) => onUpdate({ technicalSkills: { ...data.technicalSkills, software: e.target.value } })} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="أنظمة المحاسبة/الإدارة" value={data.technicalSkills.accountingSystems} placeholder="Oracle, QuickBooks, Odoo" onChange={(e) => onUpdate({ technicalSkills: { ...data.technicalSkills, accountingSystems: e.target.value } })} />
+            <InputField label="معدات/أدوات تخصصية" value={data.technicalSkills.labEquipment} placeholder="LabVIEW, Spectrometer, PCR" onChange={(e) => onUpdate({ technicalSkills: { ...data.technicalSkills, labEquipment: e.target.value } })} />
+          </div>
           <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">مهارات شخصية</label>
             <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
-              {['القيادة', 'العمل الجماعي', 'حل المشكلات', 'التواصل الفعال', 'إدارة الوقت', 'التفكير النقدي'].map(skill => (
+              {['القيادة', 'العمل الجماعي', 'حل المشكلات', 'التواصل الفعال', 'إدارة الوقت', 'التفكير النقدي', 'التفاوض', 'المرونة'].map(skill => (
                 <button 
                   key={skill}
                   onClick={() => {

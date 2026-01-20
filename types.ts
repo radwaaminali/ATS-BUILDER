@@ -28,6 +28,13 @@ export interface Education {
   grade: string;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  year: string;
+}
+
 export interface Certification {
   id: string;
   name: string;
@@ -92,6 +99,7 @@ export interface CVData {
   jobTarget: string;
   education: Education[];
   experience: Experience[];
+  projects: Project[];
   certifications: Certification[];
   customSections: CustomSection[];
   technicalSkills: {
@@ -105,7 +113,7 @@ export interface CVData {
   coverLetter: string;
   interviewPrep: InterviewPrep;
   linkedInAnalysis: LinkedInAnalysis;
-  cvRefresh: CVRefreshAnalysis; // الحقل الجديد
+  cvRefresh: CVRefreshAnalysis;
   settings: CVSettings;
 }
 

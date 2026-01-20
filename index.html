@@ -22,6 +22,32 @@
       .font-inter { font-family: 'Inter', sans-serif; }
       .font-serif-standard { font-family: 'Times New Roman', Times, serif; }
 
+      /* أنيميشن شريط النص المتحرك الاحترافي */
+      @keyframes ticker-scroll-rtl {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(50%); }
+      }
+
+      .ticker-container {
+        overflow: hidden;
+        white-space: nowrap;
+        background: #0f172a;
+        position: relative;
+        display: flex;
+      }
+
+      .ticker-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        animation: ticker-scroll-rtl 60s linear infinite;
+        will-change: transform;
+      }
+
+      .ticker-wrapper:hover {
+        animation-play-state: paused;
+      }
+
       /* تنسيقات الطباعة الاحترافية */
       @media print {
         @page {
@@ -53,21 +79,10 @@
           max-width: none !important;
           margin: 0 !important;
         }
-        /* منع انقسام العناصر في وسط الصفحة */
         .avoid-break {
           page-break-inside: avoid !important;
           break-inside: avoid !important;
         }
-      }
-
-      /* تحسين مظهر المهام كقائمة نقطية */
-      .achievement-list {
-        list-style-type: disc;
-        margin-right: 1.5rem;
-      }
-      .achievement-list li {
-        margin-bottom: 0.4rem;
-        line-height: 1.6;
       }
 
       .custom-scrollbar::-webkit-scrollbar {
