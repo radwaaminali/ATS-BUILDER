@@ -102,6 +102,7 @@ const App: React.FC = () => {
             <div className="flex p-1 bg-slate-200 rounded-2xl mb-6 gap-1 overflow-x-auto shadow-inner no-print">
               <button onClick={() => setActiveTab('refresh')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'refresh' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}>🔄 تحديث ذكي</button>
               <button onClick={() => setActiveTab('edit')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'edit' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>تعديل السيرة</button>
+              <button onClick={() => setActiveTab('cover-letter')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'cover-letter' ? 'bg-white shadow text-emerald-600' : 'text-slate-500'}`}>خطاب التغطية</button>
               <button onClick={() => setActiveTab('interview')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'interview' ? 'bg-white shadow text-amber-600' : 'text-slate-500'}`}>المقابلات</button>
               <button onClick={() => setActiveTab('linkedin')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'linkedin' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>LinkedIn</button>
               <button onClick={() => setActiveTab('settings')} className={`shrink-0 flex-1 py-3 px-6 rounded-xl font-bold text-[10px] uppercase transition-all ${activeTab === 'settings' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>التنسيق</button>
@@ -112,11 +113,12 @@ const App: React.FC = () => {
                activeTab === 'settings' ? <SettingsForm settings={cvData.settings} onUpdate={(s) => updateData({ settings: s })} /> : 
                activeTab === 'linkedin' ? <LinkedInSection data={cvData} onUpdate={(analysis) => updateData({ linkedInAnalysis: analysis })} /> :
                activeTab === 'interview' ? <InterviewPrepSection data={cvData} onUpdate={(prep) => updateData({ interviewPrep: prep })} /> :
+               activeTab === 'cover-letter' ? <CoverLetterSection data={cvData} onUpdate={(text) => updateData({ coverLetter: text })} /> :
                <CVForm data={cvData} onUpdate={updateData} />}
             </div>
           </div>
 
-          <div className={`w-full lg:w-1/2 ${['edit', 'settings', 'linkedin', 'refresh', 'interview'].includes(activeTab) ? 'hidden lg:block' : ''}`}>
+          <div className={`w-full lg:w-1/2 ${['edit', 'settings', 'linkedin', 'refresh', 'interview', 'cover-letter'].includes(activeTab) ? 'hidden lg:block' : ''}`}>
              <div className="sticky top-24 space-y-6">
                 <div className="no-print bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-slate-100 space-y-4">
                   <button onClick={handleExportPDF} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
