@@ -1,4 +1,16 @@
 
+export interface Slide {
+  title: string;
+  content: string[];
+  type: 'intro' | 'experience' | 'projects' | 'skills' | 'contact';
+}
+
+export interface PresentationData {
+  slides: Slide[];
+  isGenerated: boolean;
+  theme: 'dark' | 'light' | 'corporate';
+}
+
 export interface CVRefreshAnalysis {
   oldScore: number;
   newScore: number;
@@ -114,6 +126,7 @@ export interface CVData {
   interviewPrep: InterviewPrep;
   linkedInAnalysis: LinkedInAnalysis;
   cvRefresh: CVRefreshAnalysis;
+  presentation: PresentationData;
   settings: CVSettings;
 }
 
